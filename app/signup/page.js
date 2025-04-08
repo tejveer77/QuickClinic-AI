@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import styled from "styled-components";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../src/lib/firebase";
@@ -21,15 +22,10 @@ const FormWrapper = styled.div`
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 450px;
-  transition: transform 0.3s ease;
-  &:hover {
-    transform: translateY(-5px);
-  }
 `;
 
 const Title = styled.h2`
   font-size: 2rem;
-  font-weight: 700;
   color: #1e3a8a;
   text-align: center;
   margin-bottom: 2rem;
@@ -41,48 +37,11 @@ const Form = styled.form`
   gap: 1.5rem;
 `;
 
-const InputWrapper = styled.div`
-  position: relative;
-`;
-
 const Input = styled.input`
-  width: 100%;
   padding: 1rem;
   border: 2px solid #e5e7eb;
   border-radius: 8px;
   font-size: 1rem;
-  color: #333;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  &:focus {
-    border-color: #10b981;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-    outline: none;
-  }
-  &::placeholder {
-    color: #9ca3af;
-  }
-`;
-
-const Label = styled.label`
-  position: absolute;
-  top: -0.6rem;
-  left: 1rem;
-  background: white;
-  padding: 0 0.25rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 1rem;
-  color: #333;
-  background: white;
-  transition: border-color 0.3s ease;
   &:focus {
     border-color: #10b981;
     outline: none;
@@ -93,20 +52,14 @@ const Button = styled.button`
   padding: 1rem;
   background-color: #10b981;
   color: white;
-  font-weight: 600;
-  font-size: 1rem;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
   &:hover {
     background-color: #059669;
-    transform: scale(1.02);
   }
   &:disabled {
     background-color: #9ca3af;
-    cursor: not-allowed;
-    transform: none;
   }
 `;
 
@@ -114,33 +67,18 @@ const ErrorText = styled.p`
   color: #ef4444;
   font-size: 0.875rem;
   text-align: center;
-  margin-top: -1rem;
-`;
-
-const LinkText = styled.p`
-  text-align: center;
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-top: 1.5rem;
-`;
-
-const LinkButton = styled.a`
-  color: #1e3a8a;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.3s ease;
-  &:hover {
-    color: #10b981;
-    text-decoration: underline;
-  }
 `;
 
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("patient");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (auth.currentUser) router.push("/patient-dashboard");
+  }, [router]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -149,15 +87,9 @@ export default function Signup() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      await axios.post("http://localhost:5000/api/users", {
-        uid: user.uid,
-        email: user.email,
-        role,
-      });
-      alert("Signed up successfully!");
+      await axios.post("http://localhost:5000/api/users", { uid: user.uid, email: user.email });
+      router.push("/patient-dashboard");
     } catch (err) {
-      console.error("Signup error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -167,40 +99,27 @@ export default function Signup() {
   return (
     <Container>
       <FormWrapper>
-        <Title>Create Your Account</Title>
+        <Title>Sign Up as Patient</Title>
         <Form onSubmit={handleSignup}>
-          <InputWrapper>
-            <Label>Email Address</Label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              required
-            />
-          </InputWrapper>
-          <InputWrapper>
-            <Label>Password</Label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-            />
-          </InputWrapper>
-          <Select value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="patient">Patient</option>
-            <option value="doctor">Doctor</option>
-          </Select>
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            required
+          />
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
+          />
           {error && <ErrorText>{error}</ErrorText>}
           <Button type="submit" disabled={loading}>
             {loading ? "Signing Up..." : "Sign Up"}
           </Button>
         </Form>
-        <LinkText>
-          Already have an account? <LinkButton href="/login">Log In</LinkButton>
-        </LinkText>
       </FormWrapper>
     </Container>
   );
