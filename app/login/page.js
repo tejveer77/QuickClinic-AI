@@ -85,13 +85,20 @@ export default function Login() {
     setLoading(true);
     setError(null);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
       try {
         await axios.get(`http://localhost:5000/api/users/${user.uid}`);
       } catch (err) {
         if (err.response?.status === 404) {
-          await axios.post("http://localhost:5000/api/users", { uid: user.uid, email: user.email });
+          await axios.post("http://localhost:5000/api/users", {
+            uid: user.uid,
+            email: user.email,
+          });
         } else {
           throw err;
         }

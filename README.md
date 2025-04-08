@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# QuickClinic AI
 
-## Getting Started
+A patient-focused healthcare app built with Next.js, Firebase, and MongoDB. Features an AI symptom checker, doctor list filtered by symptoms, appointment booking with email reminders, prescription uploads, and a video call mockup. Designed to streamline patient care with a modern, intuitive UI.
 
-First, run the development server:
+## Components
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Signup (`/src/app/signup/page.js`)**  
+  Registers patients using Firebase Authentication. Syncs user data (UID, email) to MongoDB with a fixed `patient` role.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Login (`/src/app/login/page.js`)**  
+  Authenticates patients via Firebase. Auto-creates MongoDB entry if missing, then redirects to the dashboard.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- **Patient Dashboard (`/src/app/patient-dashboard/page.js`)**  
+  Central hub for patients. Links to symptom checker, appointments, prescriptions, video calls, and logout. Displays a grid of interactive cards.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Doctor List (`/src/app/doctor-list/page.js`)**  
+  Fetches and displays doctors from MongoDB based on symptoms entered in the checker. Includes a "Book" button for appointments.
 
-## Learn More
+- **Appointments (`/src/app/appointments/page.js`)**  
+  Form to book appointments with a selected doctor. Stores details in MongoDB and sends an email reminder to the doctor.
 
-To learn more about Next.js, take a look at the following resources:
+- **Prescriptions (`/src/app/prescriptions/page.js`)**  
+  Allows patients to upload prescription files (mock URL for now). Saves to MongoDB with patient UID and timestamp.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Video Call (`/src/app/video-call/page.js`)**  
+  Placeholder for a video call feature with a doctor. Displays a mock screen; ready for Twilio/WebRTC integration.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Backend (`/backend/server.js`)**  
+  Node.js/Express server with MongoDB integration. Handles user creation, doctor queries, appointment booking, prescription storage, and email notifications via Nodemailer.
 
-## Deploy on Vercel
+## Routes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **`/`**: Redirects to `/login` (default landing).
+- **`/signup`**: Patient signup page.
+- **`/login`**: Patient login page.
+- **`/patient-dashboard`**: Main patient interface, protected route.
+- **`/doctor-list?symptoms=<query>`**: Lists doctors matching symptoms.
+- **`/appointments?doctorId=<id>`**: Appointment booking form.
+- **`/prescriptions`**: Prescription upload page.
+- **`/video-call`**: Video call mockup.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**API Routes (Backend)**:
+- `GET /api/test`: Health check.
+- `POST /api/users`: Creates a patient in MongoDB.
+- `GET /api/users/:uid`: Fetches patient role.
+- `GET /api/doctors?symptoms=<query>`: Returns doctors by symptom.
+- `POST /api/appointments`: Books an appointment and sends email.
+- `POST /api/prescriptions`: Stores prescription data.
+
+## State Management
+
+- **React Hooks**:  
+  - `useState`: Manages local component state (e.g., form inputs like email, password, symptoms, etc.).
+  - `useEffect`: Handles side effects (e.g., redirecting on auth state change, fetching doctors on mount).
+  - Example: In `patient-dashboard`, `useState` tracks `symptoms`, while `useEffect` checks auth status.
+
+- **Firebase Auth**:  
+  - Global auth state via `auth.currentUser`. Used across components to protect routes and fetch patient UID.
+
+- **URL Params**:  
+  - `useSearchParams` from `next/navigation` passes data between pages (e.g., `symptoms` to `doctor-list`, `doctorId` to `appointments`).
+
+- **No Redux/Context**:  
+  - App is lightweight, so state stays local to components or URL params. Scalable to Context API if needed for global patient data later.
