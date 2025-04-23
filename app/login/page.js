@@ -197,7 +197,7 @@ export default function Login() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            Log In
+            Log In 
           </Button>
         </form>
       </Card>
